@@ -15,7 +15,7 @@ def NN(epoch, net, lemniscate, trainloader, testloader, recompute_memory=0):
     total = 0
     testsize = testloader.dataset.__len__()
 
-    trainFeatures = lemniscate['memory'].t()
+    trainFeatures = lemniscate.memory.t()
     if hasattr(trainloader.dataset, 'imgs'):
         trainLabels = torch.LongTensor([y for (p, y) in trainloader.dataset.imgs]).cuda()
     else:
@@ -72,7 +72,8 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
     total = 0
     testsize = testloader.dataset.__len__()
 
-    trainFeatures = lemniscate['memory'].t() #why transposed?
+    # pdb.set_trace()
+    trainFeatures = lemniscate.memory.t() #why transposed?
     if hasattr(trainloader.dataset, 'imgs'):
         trainLabels = torch.LongTensor([y for (p, y) in trainloader.dataset.imgs]).cuda()
     else:
@@ -98,7 +99,7 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
         retrieval_one_hot = torch.zeros(K, C).cuda()
         for batch_idx, (inputs, targets, indexes) in enumerate(testloader):
             end = time.time()
-            targets = targets.cuda(async=True)
+            targets = targets.cuda()#async=True
             batchSize = inputs.size(0)
             features = net(inputs)
             net_time.update(time.time() - end)
@@ -115,7 +116,7 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
             yd_transform = yd.clone().div_(sigma).exp_()
             probs = torch.sum(torch.mul(retrieval_one_hot.view(batchSize, -1 , C), yd_transform.view(batchSize, -1, 1)), 1)
             _, predictions = probs.sort(1, True)
-            pdb.set_trace()
+            # pdb.set_trace()
 
             # Find which predictions match the target
             correct = predictions.eq(targets.data.view(-1,1))
