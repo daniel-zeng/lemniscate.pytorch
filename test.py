@@ -4,6 +4,7 @@ import datasets
 from lib.utils import AverageMeter
 import torchvision.transforms as transforms
 import numpy as np
+import pdb
 
 def NN(epoch, net, lemniscate, trainloader, testloader, recompute_memory=0):
     net.eval()
@@ -14,7 +15,7 @@ def NN(epoch, net, lemniscate, trainloader, testloader, recompute_memory=0):
     total = 0
     testsize = testloader.dataset.__len__()
 
-    trainFeatures = lemniscate.memory.t()
+    trainFeatures = lemniscate['memory'].t()
     if hasattr(trainloader.dataset, 'imgs'):
         trainLabels = torch.LongTensor([y for (p, y) in trainloader.dataset.imgs]).cuda()
     else:
@@ -71,7 +72,7 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
     total = 0
     testsize = testloader.dataset.__len__()
 
-    trainFeatures = lemniscate.memory.t()
+    trainFeatures = lemniscate['memory'].t() #why transposed?
     if hasattr(trainloader.dataset, 'imgs'):
         trainLabels = torch.LongTensor([y for (p, y) in trainloader.dataset.imgs]).cuda()
     else:
@@ -114,6 +115,7 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
             yd_transform = yd.clone().div_(sigma).exp_()
             probs = torch.sum(torch.mul(retrieval_one_hot.view(batchSize, -1 , C), yd_transform.view(batchSize, -1, 1)), 1)
             _, predictions = probs.sort(1, True)
+            pdb.set_trace()
 
             # Find which predictions match the target
             correct = predictions.eq(targets.data.view(-1,1))

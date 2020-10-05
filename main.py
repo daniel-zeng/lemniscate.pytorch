@@ -24,6 +24,8 @@ from lib.NCECriterion import NCECriterion
 from lib.utils import AverageMeter
 from test import NN, kNN
 
+import pdb
+
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
@@ -161,8 +163,9 @@ def main():
         if os.path.isfile(args.resume):
             print("=> loading checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
+            # pdb.set_trace()
             args.start_epoch = checkpoint['epoch']
-            best_prec1 = checkpoint['best_prec1']
+            best_prec1 = checkpoint.get('best_prec1', 0)
             model.load_state_dict(checkpoint['state_dict'])
             lemniscate = checkpoint['lemniscate']
             optimizer.load_state_dict(checkpoint['optimizer'])
