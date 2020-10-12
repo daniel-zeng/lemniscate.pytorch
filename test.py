@@ -15,7 +15,7 @@ def NN(epoch, net, lemniscate, trainloader, testloader, recompute_memory=0):
     total = 0
     testsize = testloader.dataset.__len__()
 
-    trainFeatures = lemniscate.memory.t()
+    trainFeatures = lemniscate.memory.t() if hasattr(lemniscate, 'memory') else lemniscate["memory"].t()
     if hasattr(trainloader.dataset, 'imgs'):
         trainLabels = torch.LongTensor([y for (p, y) in trainloader.dataset.imgs]).cuda()
     else:
@@ -28,7 +28,6 @@ def NN(epoch, net, lemniscate, trainloader, testloader, recompute_memory=0):
         for batch_idx, (inputs, targets, indexes) in enumerate(temploader):
             targets = targets.cuda(async=True)
             batchSize = inputs.size(0)
-            features = net(inputs)
             trainFeatures[:, batch_idx*batchSize:batch_idx*batchSize+batchSize] = features.data.t()
         trainLabels = torch.LongTensor(temploader.dataset.train_labels).cuda()
         trainloader.dataset.transform = transform_bak
@@ -73,7 +72,7 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
     testsize = testloader.dataset.__len__()
 
     # pdb.set_trace()
-    trainFeatures = lemniscate.memory.t() #why transposed?
+    trainFeatures = lemniscate.memory.t() if hasattr(lemniscate, 'memory') else lemniscate["memory"].t()
     if hasattr(trainloader.dataset, 'imgs'):
         trainLabels = torch.LongTensor([y for (p, y) in trainloader.dataset.imgs]).cuda()
     else:
@@ -83,13 +82,24 @@ def kNN(epoch, net, lemniscate, trainloader, testloader, K, sigma, recompute_mem
     if recompute_memory:
         transform_bak = trainloader.dataset.transform
         trainloader.dataset.transform = testloader.dataset.transform
-        temploader = torch.utils.data.DataLoader(trainloader.dataset, batch_size=100, shuffle=False, num_workers=1)
+        dim2048 = torch.zeros(1281167, 2048).cpu()
+        s_batch_size = 100
+        temploader = torch.utils.data.DataLoader(trainloader.dataset, batch_size=s_batch_size, shuffle=False, num_workers=4)
         for batch_idx, (inputs, targets, indexes) in enumerate(temploader):
+            # if batch_idx == 10:
+                # pdb.set_trace()
+            if batch_idx % 100 == 0:
+                print(batch_idx)
+            
+
             targets = targets.cuda(async=True)
             batchSize = inputs.size(0)
-            features = net(inputs)
-            trainFeatures[:, batch_idx*batchSize:batch_idx*batchSize+batchSize] = features.data.t()
-        trainLabels = torch.LongTensor(temploader.dataset.train_labels).cuda()
+            features2048 = net.forward(inputs)
+            dim2048[batch_idx * s_batch_size : batch_idx * s_batch_size+batchSize] = features2048.data
+            # trainFeatures[:, batch_idx*batchSize:batch_idx*batchSize+batchSize] = features.data.t()
+        torch.save(dim2048, "dim2048-2.pt")
+        pdb.set_trace()
+        # trainLabels = torch.LongTensor(trainloader.dataset.train_labels).cuda()
         trainloader.dataset.transform = transform_bak
     
     top1 = 0.

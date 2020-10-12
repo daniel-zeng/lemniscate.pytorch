@@ -83,6 +83,7 @@ best_prec1 = 0
 def main():
     global args, best_prec1
     args = parser.parse_args()
+    print(args)
 
     args.distributed = args.world_size > 1
 
@@ -134,7 +135,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
-
+    # train_loader = None
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolderInstance(valdir, transforms.Compose([
             transforms.Resize(256),
@@ -177,7 +178,7 @@ def main():
     cudnn.benchmark = True
 
     if args.evaluate:
-        kNN(0, model, lemniscate, train_loader, val_loader, 200, args.nce_t)
+        kNN(0, model, lemniscate, train_loader, val_loader, 200, args.nce_t, 1) #recompute memory
         return
 
     for epoch in range(args.start_epoch, args.epochs):
